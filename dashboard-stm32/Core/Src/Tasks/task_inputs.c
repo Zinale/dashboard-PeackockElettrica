@@ -53,8 +53,8 @@ static void Read_Physical_Buttons(void)
     bool raw_page = (HAL_GPIO_ReadPin(PAGE_btn_GPIO_Port, PAGE_btn_Pin) == GPIO_PIN_RESET);
 
     /* Pulsante R2D */
-    if (raw_r2d && !car_state.btn_1.pressed &&
-        (now - car_state.btn_1.last_pressed_time > BTN_COOLDOWN_MS)) {
+    if (raw_r2d && !car_state.btn_1.pressed 
+        &&   (now - car_state.btn_1.last_pressed_time > BTN_COOLDOWN_MS)) {
         car_state.btn_1.pressed           = true;
         car_state.btn_1.last_pressed_time = now;
         car_state.btn_1.just_pressed      = true;
@@ -81,6 +81,29 @@ static void Read_Physical_Buttons(void)
 static void Read_SR(void)
 {
     SR_ProcessPeriodic();
+
+#ifdef SR_DEBUG_PRINT
+    /* Stampa il valore grezzo ogni ~500 ms per non saturare la seriale */
+    static uint32_t sr_last_print_time = 0;
+    uint32_t now_dbg = HAL_GetTick();
+    if ((now_dbg - sr_last_print_time) >= 100U) {
+        sr_last_print_time = now_dbg;
+        uint8_t  raw = SR_GetRawValue();
+        int8_t   pos = SR_GetStablePosition();
+        /* Converte il byte in stringa binaria (MSB a sinistra) */
+        char bin_str[9];
+        for (int _b = 7; _b >= 0; _b--) {
+            bin_str[7 - _b] = ((raw >> _b) & 1) ? '1' : '0';
+        }
+        bin_str[8] = '\0';
+        Display_Message(&huart2, "=====================================\r\n");
+        Display_Message(&huart2,
+            "[SR] RAW=0x%02X (b%s) | POS=%d\r\n",
+            raw, bin_str, (int)pos);
+        Display_Message(&huart2, "=====================================\r\n");
+    }
+#endif /* SR_DEBUG_PRINT */
+
     if (SR_HasChanged()) {
         car_state.SR_raw_position = SR_GetStablePosition();
         Apply_SR_Position(SR_GetStablePosition());
@@ -132,6 +155,10 @@ static void Process_Input_Actions(void)
             } else if (car_state.mcu.brake_pressure_front > 5 &&
                        car_state.mcu.car_speed < 2 &&
                        car_state.bms.sdc_state) {
+                car_state.r2d = true;
+            }
+            //TODO: Decommentare la condizione di sicurezza per R2D 
+            else{
                 car_state.r2d = true;
             }
         }

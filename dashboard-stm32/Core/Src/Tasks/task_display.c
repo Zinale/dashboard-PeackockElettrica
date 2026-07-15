@@ -84,7 +84,7 @@ static void Draw_Page1(bool r2d, bool sdc, bool force)
     // Aggiornamento BACKGROUND e CROP IMAGE (Solo se Mappa o Pagina cambiano)
     if (force) {
         uint8_t bg_id = get_bg_image_id(car_state.SR_map, 1);
-        Nextion_Cmd("page1.pic=%d", bg_id); // Cambia lo sfondo della pagina intera
+        Nextion_Cmd("page1.pic=%d", bg_id); // Aggiorna attributo sfondo
 
         static const char* crop_objs[] = {
             "speed", "soc", "t_pack", "t_inv", "t_motor", "lvbatt_volt", "error"
@@ -92,6 +92,7 @@ static void Draw_Page1(bool r2d, bool sdc, bool force)
         for (size_t i = 0; i < (sizeof(crop_objs)/sizeof(crop_objs[0])); i++) {
             Nextion_Cmd("%s.picc=%d", crop_objs[i], bg_id); // Aggiorna il ritaglio per i testi
         }
+        Nextion_Cmd("ref 0"); // Ridisegna tutti i componenti con i nuovi attributi
     }
 
     // Valori Numerici in Real-Time
@@ -150,6 +151,7 @@ static void Draw_Page2(bool r2d, bool sdc, bool force, uint16_t bco, uint16_t pc
         Nextion_Cmd("sas_perc_left.pco=%d",  bco);
         Nextion_Cmd("sas_perc_right.bco=%d", bco);
         Nextion_Cmd("sas_perc_right.pco=%d", pco);
+        Nextion_Cmd("ref 0");
     }
 
     Nextion_Cmd("speed.txt=\"%d\"",      car_state.mcu.car_speed);
@@ -208,6 +210,7 @@ static void Draw_Page3(bool force, uint16_t bco, uint16_t pco)
             Nextion_Cmd("m%d_perc.bco=%d", i, pco); /* bco/pco invertiti per i moduli */
             Nextion_Cmd("m%d_perc.pco=%d", i, bco);
         }
+        Nextion_Cmd("ref 0");
     }
 
     int temp_pack_sum = 0, temp_pack_max = 0;
@@ -268,6 +271,7 @@ static void Draw_Page4(bool force, uint16_t bco, uint16_t pco)
         for (size_t i = 0; i < (sizeof(crop_objs)/sizeof(crop_objs[0])); i++) {
             Nextion_Cmd("%s.picc=%d", crop_objs[i], bg_id);
         }
+        Nextion_Cmd("ref 0");
     }
 
     Nextion_Cmd("speed.txt=\"%d\"",  car_state.mcu.car_speed);

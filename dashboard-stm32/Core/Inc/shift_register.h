@@ -3,7 +3,9 @@
 
 #include "main.h"
 
-// Definisci qui i parametri del tuo debouncing
+#define USE_SR
+// #define SR_DEBUG_PRINT
+
 #define SR_DEBOUNCE_SAMPLES 5
 #define SR_READ_INTERVAL_MS 10 // Il task gira a 20ms, quindi questo può stare a 0 o 10
 
@@ -19,5 +21,8 @@ void SR_Init(void);
 void SR_ProcessPeriodic(void);
 uint8_t SR_HasChanged(void);
 int8_t SR_GetStablePosition(void);
+uint8_t SR_GetRawValue(void);   // Restituisce l'ultimo byte grezzo letto (prima del debounce)
+
+
 
 #endif /* SHIFT_REGISTER_H_ */

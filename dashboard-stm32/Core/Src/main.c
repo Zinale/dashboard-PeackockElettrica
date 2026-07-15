@@ -102,8 +102,6 @@ int main(void)
   /* USER CODE BEGIN 2 */
   SchedulerInit();
 
-  char test_msg[] = "CIAO! La Seriale Funziona!\r\n";
-  HAL_UART_Transmit(&huart2, (uint8_t*)test_msg, strlen(test_msg), 1000);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -113,14 +111,10 @@ int main(void)
 	  SchedulerManagementFunction();
 
 	  /*
-	  char test_msg[] = "Ciao dal volante!\r\n";
-	  HAL_UART_Transmit(&huart2, (uint8_t*)test_msg, strlen(test_msg), 1000);
-	  HAL_Delay(1000);
-	  */
-
 	  if(HAL_GetTick() % 1000 == 0){
 		 // HAL_GPIO_TogglePin(luce_pcb_GPIO_Port,luce_pcb_Pin);
 	  }
+	  */
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -219,7 +213,7 @@ static void MX_USART2_UART_Init(void)
 
   /* USER CODE END USART2_Init 1 */
   huart2.Instance = USART2;
-  huart2.Init.BaudRate = 9600;
+  huart2.Init.BaudRate = 921600;
   huart2.Init.WordLength = UART_WORDLENGTH_8B;
   huart2.Init.StopBits = UART_STOPBITS_1;
   huart2.Init.Parity = UART_PARITY_NONE;
@@ -275,7 +269,10 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(luce_pcb_GPIO_Port, luce_pcb_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, SR_latch_Pin|SR_clock_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(SR_latch_GPIO_Port, SR_latch_Pin, GPIO_PIN_SET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(SR_clock_GPIO_Port, SR_clock_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : luce_pcb_Pin */
   GPIO_InitStruct.Pin = luce_pcb_Pin;

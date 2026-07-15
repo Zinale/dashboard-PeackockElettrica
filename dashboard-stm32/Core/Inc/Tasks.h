@@ -10,6 +10,7 @@
 
 #include "car_data.h"
 #include "Communication/can.h"
+#include "Scheduler.h"
 
 extern CarData_t car_state;
 

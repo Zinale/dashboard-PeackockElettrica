@@ -127,3 +127,7 @@ uint8_t SR_HasChanged(void) {
 int8_t SR_GetStablePosition(void) {
     return byteToPosition(sr_state.currentValue);
 }
+
+uint8_t SR_GetRawValue(void) {
+    return sr_state.lastRawValue;
+}

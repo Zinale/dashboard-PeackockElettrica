@@ -17,8 +17,6 @@
 #define INTERVAL_SEND_CAN       50   // Invio parametri e mappa CAN
 #define INTERVAL_UPDATE_DISP    100  // Refresh dati Display
 
-//#define USE_SR
-
 /* ========================================== */
 
 void SchedulerInit(void);
