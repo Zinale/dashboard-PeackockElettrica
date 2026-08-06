@@ -234,8 +234,8 @@ typedef struct {
     // Valori dei parametri di dinamica modificabili dal pilota
     uint8_t  val_regen;
     uint8_t  val_src;
-    uint8_t  val_os;
     uint8_t  val_tvc;
+    uint8_t  val_event;
 
     uint32_t last_can_message_received;
     bool        error_flag;

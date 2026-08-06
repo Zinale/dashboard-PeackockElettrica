@@ -60,7 +60,7 @@ static void Update_Error_Display(DashError_t err)
     if (err == last_sent && subcode == last_subcode) return;
 
     if (err == ERR_NONE) {
-        Nextion_Cmd("error.txt=\"\"");
+        Nextion_Cmd("error.txt=\"---\"");
     } else if (err == ERR_MCU_INV1_FAULT) {
         Nextion_Cmd("error.txt=\"L%d\"", subcode);
     } else if (err == ERR_MCU_INV2_FAULT) {
@@ -95,7 +95,6 @@ static void Draw_Page1(bool r2d, bool sdc, bool force)
         Nextion_Cmd("ref 0"); // Ridisegna tutti i componenti con i nuovi attributi
     }
 
-    // Valori Numerici in Real-Time
     Nextion_Cmd("speed.txt=\"%d\"",   car_state.mcu.car_speed);
     Nextion_Cmd("soc.txt=\"%d\"",     car_state.bms.SoC_percent);
 
@@ -108,7 +107,7 @@ static void Draw_Page1(bool r2d, bool sdc, bool force)
     Nextion_Cmd("t_motor.txt=\"%d\"", (car_state.mcu.motor104_temp + car_state.mcu.motor204_temp) / 2);
     Nextion_Cmd("lvbatt_volt.txt=\"%.1f\"", car_state.pdm_vcu1.lv_battery_voltage);
 
-    // Icone di Stato (Edge detection hardware interno)
+    // Icone di Stato 
     if (r2d != last_r2d || force) {
         Nextion_Cmd("r2d_status.pic=%d", r2d ? 13 : 12);
         last_r2d = r2d;
@@ -140,7 +139,7 @@ static void Draw_Page2(bool r2d, bool sdc, bool force, uint16_t bco, uint16_t pc
 
         static const char* crop_objs[] = {
             "speed", "speed_fl", "speed_fr", "app1", "app2", "brake_bar", 
-            "cool_temp", "susp_fl", "susp_fr", "susp_rl", "susp_rr", "sas_angle"
+            "cool_temp", "susp_fl", "susp_fr", "susp_rl", "susp_rr", "sas_angle","error"
         };
         for (size_t i = 0; i < (sizeof(crop_objs)/sizeof(crop_objs[0])); i++) {
             Nextion_Cmd("%s.picc=%d", crop_objs[i], bg_id);
@@ -199,7 +198,7 @@ static void Draw_Page3(bool force, uint16_t bco, uint16_t pco)
             "speed", "lvbatt_volt", "fan_perc", "max_temp_pack", "curr_dis_max", 
             "curr_reg_max", "temp_mot1", "temp_mot2", "temp_inv1", "temp_inv2", 
             "current", "soc", "soh", "m1_volt", "m2_volt", "m3_volt", "m4_volt", 
-            "m5_volt", "m6_volt"
+            "m5_volt", "m6_volt","error"
         };
         for (size_t i = 0; i < (sizeof(crop_objs)/sizeof(crop_objs[0])); i++) {
             Nextion_Cmd("%s.picc=%d", crop_objs[i], bg_id);
@@ -257,7 +256,7 @@ static void Draw_Page4(bool force, uint16_t bco, uint16_t pco)
 {
     static uint8_t last_setting = 0xFF;
     static uint8_t last_map     = 0xFF;
-    static uint8_t last_regen = 0, last_src = 0, last_os = 0, last_tvc = 0;
+    static uint8_t last_regen = 1, last_src = 1, last_tvc = 1, last_event = 1;
 
     // Aggiornamento BACKGROUND e CROP IMAGE
     if (force) {
@@ -265,8 +264,8 @@ static void Draw_Page4(bool force, uint16_t bco, uint16_t pco)
         Nextion_Cmd("page4.pic=%d", bg_id);
 
         static const char* crop_objs[] = {
-            "speed", "soc", "soh", "regen_text", "src_text", "os_text", "tvc_text",
-            "regen_num", "src_num", "os_num", "tvc_num"
+            "speed", "soc", "soh", "regen_text", "src_text", "tvc_text", "event_text",
+            "regen_num", "src_num", "tvc_num", "event_num","error"
         };
         for (size_t i = 0; i < (sizeof(crop_objs)/sizeof(crop_objs[0])); i++) {
             Nextion_Cmd("%s.picc=%d", crop_objs[i], bg_id);
@@ -279,16 +278,16 @@ static void Draw_Page4(bool force, uint16_t bco, uint16_t pco)
     Nextion_Cmd("soh.txt=\"%d\"",    car_state.bms.SoH_percent);
     Nextion_Cmd("regen_num.val=%d",  car_state.val_regen);
     Nextion_Cmd("src_num.val=%d",    car_state.val_src);
-    Nextion_Cmd("os_num.val=%d",     car_state.val_os);
     Nextion_Cmd("tvc_num.val=%d",    car_state.val_tvc);
+    Nextion_Cmd("event_num.val=%d",  car_state.val_event);
 
     bool changed = force
         || car_state.selected_setting != last_setting
         || car_state.SR_map           != last_map
         || car_state.val_regen        != last_regen
         || car_state.val_src          != last_src
-        || car_state.val_os           != last_os
-        || car_state.val_tvc          != last_tvc;
+        || car_state.val_tvc          != last_tvc
+        || car_state.val_event        != last_event;
 
     if (!changed) return;
 
@@ -313,8 +312,8 @@ static void Draw_Page4(bool force, uint16_t bco, uint16_t pco)
 
     DRAW_PARAM("regen", 1, car_state.val_regen);
     DRAW_PARAM("src",   2, car_state.val_src);
-    DRAW_PARAM("os",    3, car_state.val_os);
-    DRAW_PARAM("tvc",   4, car_state.val_tvc);
+    DRAW_PARAM("tvc",    3, car_state.val_tvc);
+    DRAW_PARAM("event",   4, car_state.val_event);
 
 #undef DRAW_PARAM
 
@@ -322,8 +321,8 @@ static void Draw_Page4(bool force, uint16_t bco, uint16_t pco)
     last_map     = car_state.SR_map;
     last_regen   = car_state.val_regen;
     last_src     = car_state.val_src;
-    last_os      = car_state.val_os;
     last_tvc     = car_state.val_tvc;
+    last_event   = car_state.val_event;
 }
 
 /* =========================================================================

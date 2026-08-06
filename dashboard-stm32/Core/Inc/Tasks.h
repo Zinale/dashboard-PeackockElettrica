@@ -19,11 +19,12 @@ void TaskInit(void);
 
 /* Task periodici chiamati dallo Scheduler */
 void Task_ReadInputs(void);    /* 20 ms  – pulsanti, SR, manettino */
-void Task_SendCAN(void);       /* 50 ms  – trasmissione frame verso la macchina */
+void Task_SendCAN(void);       /* 150 ms  – trasmissione frame verso la macchina */
 void Task_UpdateDisplay(void); /* 100 ms – aggiornamento display Nextion */
 
 void system_reset(void) ;
 
+#define CAN_ERROR_RX_OTHER_BOARDS 1  /**< Abilita la gestione degli errori di timeout per le schede diverse dalla dashboard */
 /* Task di monitoring: chiamato all'interno di Task_UpdateDisplay */
 bool Task_CheckCANTimeouts(void);
 

@@ -14,7 +14,7 @@
  * CONFIGURAZIONE INTERVALLI TASK (in ms)
  * ========================================== */
 #define INTERVAL_READ_INPUTS    20   // Lettura pulsanti, SR e manettino
-#define INTERVAL_SEND_CAN       50   // Invio parametri e mappa CAN
+#define INTERVAL_SEND_CAN       150   // Invio parametri e mappa CAN
 #define INTERVAL_UPDATE_DISP    100  // Refresh dati Display
 
 /* ========================================== */

@@ -25,8 +25,8 @@ void Task_SendCAN(void)
 
     uint8_t p1 = (car_state.val_regen - 1) & 0x03;
     uint8_t p2 = (car_state.val_src   - 1) & 0x03;
-    uint8_t p3 = (car_state.val_os    - 1) & 0x03;
-    uint8_t p4 = (car_state.val_tvc   - 1) & 0x03;
+    uint8_t p3 = (car_state.val_tvc    - 1) & 0x03;
+    uint8_t p4 = (car_state.val_event - 1) & 0x03;
     tx_data[2] = (p4 << 6) | (p3 << 4) | (p2 << 2) | p1;
 
     Transmit_CAN_Message(&hcan, CAR_DASH_R2D_MAP_PARAMS, 3, tx_data);

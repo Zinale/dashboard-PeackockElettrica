@@ -16,7 +16,8 @@
  * Mappa la posizione fisica (1-8) sulle variabili car_state.
  *   1-3  -> mappa motore (ECO / NORM / GAS)
  *   4-7  -> selezione parametro dinamico (REGEN / SRC / OS / TVC)
- *   0, 8 -> neutro, nessuna azione
+ *   8    -> pagina dedicata page5 (nessuna azione tasti)
+ *   0    -> neutro, nessuna azione
  *  -1    -> errore hardware (cortocircuito tra posizioni)
  * ========================================================================= */
 static void Apply_SR_Position(int8_t pos)
@@ -30,14 +31,27 @@ static void Apply_SR_Position(int8_t pos)
     if (pos >= 1 && pos <= 3) {
         car_state.SR_map = pos;
         car_state.selected_setting = 0;
+
+        /* Uscita da page5 verso pagina principale con nuova mappa. */
+        if (car_state.current_page == 5) {
+            car_state.current_page = 1;
+            Nextion_Cmd("page page1");
+        }
     } else if (pos >= 4 && pos <= 7) {
         car_state.selected_setting = pos - 3;
         if (car_state.current_page != 4) {
             car_state.current_page = 4;
             Nextion_Cmd("page page4");
         }
+    } else if (pos == 8) {
+        /* Mantieni la mappa corrente e apri la pagina dedicata. */
+        car_state.selected_setting = 0;
+        if (car_state.current_page != 5) {
+            car_state.current_page = 5;
+            Nextion_Cmd("page page5");
+        }
     }
-    /* pos == 0 o pos == 8: nessuna azione */
+    /* pos == 0: nessuna azione */
 }
 
 /* =========================================================================
@@ -121,6 +135,24 @@ static void Process_Input_Actions(void)
     static uint32_t dual_press_start = 0;
     static bool     dual_press_active = false;
 
+    /* In page5 è consentita solo la combo reset; i singoli tasti sono ignorati. */
+    if (car_state.current_page == 5) {
+        if (car_state.btn_1.pressed && car_state.btn_2.pressed) {
+            if (!dual_press_active) {
+                dual_press_active = true;
+                dual_press_start  = HAL_GetTick();
+            } else if ((HAL_GetTick() - dual_press_start) > 2000) {
+                system_reset();
+            }
+        } else {
+            dual_press_active = false;
+        }
+
+        car_state.btn_1.just_pressed = false;
+        car_state.btn_2.just_pressed = false;
+        return;
+    }
+
     /* --- COMBO: entrambi i tasti premuti -> reset dopo 2 s --- */
     if (car_state.btn_1.pressed && car_state.btn_2.pressed) {
         if (!dual_press_active) {
@@ -144,8 +176,8 @@ static void Process_Input_Actions(void)
             switch (car_state.selected_setting) {
                 case 1: if (car_state.val_regen > 1) car_state.val_regen--; break;
                 case 2: if (car_state.val_src   > 1) car_state.val_src--;   break;
-                case 3: if (car_state.val_os    > 1) car_state.val_os--;    break;
-                case 4: if (car_state.val_tvc   > 1) car_state.val_tvc--;   break;
+                case 3: if (car_state.val_tvc    > 1) car_state.val_tvc--;    break;
+                case 4: if (car_state.val_event  > 1) car_state.val_event--;  break;
                 default: break;
             }
         } else {
@@ -178,8 +210,8 @@ static void Process_Input_Actions(void)
             switch (car_state.selected_setting) {
                 case 1: car_state.val_regen = (car_state.val_regen % 4) + 1; break;
                 case 2: car_state.val_src   = (car_state.val_src   % 4) + 1; break;
-                case 3: car_state.val_os    = (car_state.val_os    % 4) + 1; break;
-                case 4: car_state.val_tvc   = (car_state.val_tvc   % 4) + 1; break;
+                case 3: car_state.val_tvc   = (car_state.val_tvc   % 4) + 1; break;
+                case 4: car_state.val_event = (car_state.val_event % 4) + 1; break;
                 default: break;
             }
         }
