@@ -16,7 +16,7 @@ void CanInit(void)
 #ifdef CAN_ENABLE
     CAN_FilterTypeDef sFilterConfig;
 
-    /* Filtro pass-all: accetta tutti gli ID standard */
+    /* Pass-all filter: accepts all standard IDs */
     sFilterConfig.FilterBank           = 0;
     sFilterConfig.FilterMode           = CAN_FILTERMODE_IDMASK;
     sFilterConfig.FilterScale          = CAN_FILTERSCALE_32BIT;
@@ -53,7 +53,7 @@ void CanInit(void)
 }
 
 /* =========================================================================
- *  TRASMISSIONE
+ *  TRANSMISSION
  * ========================================================================= */
 void Transmit_CAN_Message(CAN_HandleTypeDef *hcan, uint32_t StdId,
                            uint32_t DLC, uint8_t *TxData)
@@ -101,7 +101,7 @@ static void Transmit_CAN_Message_MCP2551(CAN_HandleTypeDef *hcan, uint32_t StdId
 }
 
 /* =========================================================================
- *  RICEZIONE 
+ *  RECEPTION 
  * ========================================================================= */
 void Receive_CAN_Message(CAN_HandleTypeDef *hcan)
 {
@@ -112,8 +112,8 @@ void Receive_CAN_Message(CAN_HandleTypeDef *hcan)
 }
 
 /* =========================================================================
- *  RICEZIONE – implementazione MCP2551
- *  Chiamata dalla callback HAL_CAN_RxFifo0MsgPendingCallback in main.c
+ *  RECEPTION – MCP2551 implementation
+ *  Called by callback HAL_CAN_RxFifo0MsgPendingCallback in main.c
  * ========================================================================= */
 static void Receive_CAN_Message_MCP2551(CAN_HandleTypeDef *hcan)
 {
@@ -300,7 +300,7 @@ void CAN_ParseFrame(uint32_t id, uint8_t *data, uint8_t dlc)
          * ----------------------------------------------------------------- */
         case CAR_BMS_STATE:
         {
-            if (dlc < 4u) break;
+            if (dlc < 6u) break;
 
             car_state.bms.SoC_percent           = data[0];
             car_state.bms.SoH_percent           = data[1];
@@ -313,13 +313,17 @@ void CAN_ParseFrame(uint32_t id, uint8_t *data, uint8_t dlc)
             break;
         }
 
+        /*-----------------------------------------------------------------
+         * 0x104
+         *
+         -----------------------------------------------------------------*/
         case CAR_MCU_FW:
         {
             if (dlc < 6u) break;
 
             //big-endian
-            car_state.mcu.wheel_speed_FL = (int16_t)((data[0] << 8) | data[1]);   //km/h
-            car_state.mcu.wheel_speed_FR = (int16_t)((data[2] << 8) | data[3]);   //km/h
+            car_state.mcu.wheel_speed_FR = (int16_t)((data[0] << 8) | data[1]);   //km/h
+            car_state.mcu.wheel_speed_FL = (int16_t)((data[2] << 8) | data[3]);   //km/h
             car_state.mcu.car_speed      = (int16_t)((data[4] << 8) | data[5]);   //km/h
 
             car_state.mcu.last_can_message_received = now;

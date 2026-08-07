@@ -57,16 +57,18 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define luce_pcb_Pin GPIO_PIN_1
+#define luce_pcb_GPIO_Port GPIOA
 #define R2D_btn_Pin GPIO_PIN_4
 #define R2D_btn_GPIO_Port GPIOA
 #define PAGE_btn_Pin GPIO_PIN_5
 #define PAGE_btn_GPIO_Port GPIOA
-#define SR_clock_Pin GPIO_PIN_5
-#define SR_clock_GPIO_Port GPIOB
+#define SR_data_Pin GPIO_PIN_5
+#define SR_data_GPIO_Port GPIOB
 #define SR_latch_Pin GPIO_PIN_6
 #define SR_latch_GPIO_Port GPIOB
-#define SR_data_Pin GPIO_PIN_7
-#define SR_data_GPIO_Port GPIOB
+#define SR_clock_Pin GPIO_PIN_7
+#define SR_clock_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 extern CAN_HandleTypeDef hcan;

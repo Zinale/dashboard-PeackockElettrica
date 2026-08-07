@@ -17,27 +17,27 @@
 
 
 /* =========================================================================
- *  CODICI ERRORE DASHBOARD
- *  Codici 1-99: errori di sistema dashboard
- *  Codici 100+: errori CAN (frame specifici)
+ *  DASHBOARD ERROR CODES
+ *  Codes 1-99: dashboard system errors
+ *  Codes 100+: CAN errors (frame specific)
  * ========================================================================= */
 typedef enum {
     ERR_NONE                  = 0,
 
-    /* Errori timeout CAN (scheda non risponde da > CAN_TIMEOUT_MS) */
+    /* CAN timeout errors (board not responding for > CAN_TIMEOUT_MS) */
     ERR_TIMEOUT_BMS           = 1,
     ERR_TIMEOUT_MCU           = 2,
     ERR_TIMEOUT_PDM_VCU1      = 3,
     ERR_TIMEOUT_PDM_VCU2      = 4,
 
-    /* Errori CAN DASHBOARD */
+    /* DASHBOARD CAN errors */
     ERR_SR_HARDWARE           = 99,
     ERR_CAN_FILTER_INIT       = 100,
     ERR_CAN_TX                = 101,
     ERR_CAN_RX                = 102,
     ERR_CAN_BUSOFF            = 103,
 
-    /* Errori BMS (0x001) */
+    /* BMS errors (0x001) */
     ERR_BMS_BASE_OVERVOLTAGE  = 201,  // real error = ERR_BMS_PACK_OVERVOLTAGE + module index
     ERR_BMS_BASE_UNDERVOLTAGE = 211,  // real error = ERR_BMS_PACK_UNDERVOLTAGE + module index
     ERR_BMS_BASE_OVERTEMP     = 221,  // real error = ERR_BMS_PACK_OVERTEMP + module index
@@ -77,7 +77,7 @@ typedef enum {
     ERR_PDM1_OC_RAD_FANS_R    = 411,
     ERR_PDM1_OC_PUMP          = 412,
 
-    /* Errori PDM VCU2 (0x004) */
+    /* PDM VCU2 errors (0x004) */
     ERR_PDM2_REAR_BRAKE       = 500,
     ERR_PDM2_REAR_PUSHRO_R    = 501,
     ERR_PDM2_REAR_PUSHRO_L    = 502,
@@ -89,7 +89,7 @@ typedef enum {
 
 typedef struct{
     bool pressed;
-    bool just_pressed;          // true SOLO per un ciclo 
+    bool just_pressed;          // true ONLY for one cycle
     uint32_t last_pressed_time;
 } button_t;
 
@@ -234,8 +234,8 @@ typedef struct {
     // Valori dei parametri di dinamica modificabili dal pilota
     uint8_t  val_regen;
     uint8_t  val_src;
-    uint8_t  val_os;
     uint8_t  val_tvc;
+    uint8_t  val_event;
 
     uint32_t last_can_message_received;
     bool        error_flag;

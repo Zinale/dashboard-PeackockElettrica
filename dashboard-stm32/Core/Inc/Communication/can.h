@@ -16,14 +16,14 @@
 /* =========================================================================
  *  CAN HARDWARE CONFIGURATION
  * ========================================================================= */
-#define CAN_ENABLE       /* Abilita interfaccia CAN */
-#define USE_MCP2551      /* Transceiver MCP2551     */
+#define CAN_ENABLE       /* Enable CAN interface */
+#define USE_MCP2551      /* MCP2551 Transceiver  */
 
 /* =========================================================================
- *  CAN MESSAGE IDs  (formato: CAR_<SORGENTE>_<CONTENUTO>)
+ *  CAN MESSAGE IDs  (format: CAR_<SOURCE>_<CONTENT>)
  * ========================================================================= */
 
-/* --- ERRORI --- */
+/* --- ERRORS --- */
 #define CAR_BMS_ERRORS          0x001
 #define CAR_INV1_ERRORS         0x002
 #define CAR_INV2_ERRORS         0x003

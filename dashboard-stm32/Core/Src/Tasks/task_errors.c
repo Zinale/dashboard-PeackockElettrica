@@ -1,45 +1,47 @@
 /*
  * task_errors.c
- *  Task_CheckCANTimeouts - chiamato da Task_Check_Errors
- *  Task_Check_Errors     - chiamato da Task_UpdateDisplay ogni 100 ms
+ *  Task_CheckCANTimeouts - called by Task_Check_Errors
+ *  Task_Check_Errors     - called by Task_UpdateDisplay every 100 ms
  *
- *  Priorità errori (dal più grave):
- *    0. Hardware locale (SR, CAN controller)
- *    1. Timeout CAN (scheda non risponde da > CAN_TIMEOUT_MS)
- *    2. Errori di rete: BMS → MCU/Inverter → PDM1 → PDM2
+ *  Error priority (highest first):
+ *    0. Local hardware (SR, CAN controller)
+ *    1. CAN Timeout (board not responding for > CAN_TIMEOUT_MS)
+ *    2. Network errors: BMS -> MCU/Inverter -> PDM1 -> PDM2
  */
 
 #include "Tasks.h"
 
-/* Macro: imposta errore e ritorna */
+/* Macro: set error and return */
 #define SET_ERR_RET(e)  do { car_state.error_flag = true; car_state.error = (e); return; } while(0)
-/* Macro: imposta errore, ritorna true (usata in CheckCANTimeouts) */
+/* Macro: set error, return true (used in CheckCANTimeouts) */
 #define TIMEOUT_ERR(e)  do { car_state.error_flag = true; car_state.error = (e); return true; } while(0)
 
 /* =========================================================================
  * Task_CheckCANTimeouts
- * Ritorna true se almeno una scheda non trasmette da > CAN_TIMEOUT_MS.
+ * Returns true if at least one board hasn't transmitted for > CAN_TIMEOUT_MS.
  * ========================================================================= */
 bool Task_CheckCANTimeouts(void)
 {
     uint32_t now = HAL_GetTick();
 
+#ifdef CAN_ERROR_RX_OTHER_BOARDS
     if ((now - car_state.bms.last_can_message_received)      > CAN_TIMEOUT_MS) TIMEOUT_ERR(ERR_TIMEOUT_BMS);
     if ((now - car_state.mcu.last_can_message_received)      > CAN_TIMEOUT_MS) TIMEOUT_ERR(ERR_TIMEOUT_MCU);
     if ((now - car_state.pdm_vcu1.last_can_message_received) > CAN_TIMEOUT_MS) TIMEOUT_ERR(ERR_TIMEOUT_PDM_VCU1);
     if ((now - car_state.pdm_vcu2.last_can_message_received) > CAN_TIMEOUT_MS) TIMEOUT_ERR(ERR_TIMEOUT_PDM_VCU2);
 
+#endif
     return false;
 }
 
 /* =========================================================================
  * Task_Check_Errors
- * Scansiona tutti gli errori in ordine di priorità e scrive car_state.error.
- * Se non ci sono errori, resetta error_flag e error a ERR_NONE.
+ * Scans all errors in priority order and writes car_state.error.
+ * If no errors are present, resets error_flag and error to ERR_NONE.
  * ========================================================================= */
 void Task_Check_Errors(void)
 {
-    /* --- Livello 0: errori hardware locali (persistenti) --- */
+    /* --- Level 0: Local hardware errors (persistent) --- */
     if (car_state.error == ERR_SR_HARDWARE ||
         car_state.error == ERR_CAN_FILTER_INIT ||
         car_state.error == ERR_CAN_TX ||

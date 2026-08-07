@@ -21,16 +21,14 @@ uint8_t cmd_end[3] = {0xFF,0xFF,0xFF};
 
 
 /**
- * @brief Transmits a formatted message over the specified UART interface.
+ * @brief Trasmette un messaggio formattato sull'interfaccia UART specificata.
  *
- * This function formats a string using a variable argument list and transmits it
- * via the provided UART interface. It dynamically allocates memory for the formatted
- * message and ensures that the allocated memory is freed after transmission.
- * If memory allocation fails, the function exits without attempting transmission.
+ * Questa funzione formatta una stringa utilizzando una lista di argomenti variabili
+ * e la trasmette tramite l'interfaccia UART fornita.
  *
- * @param huart Pointer to the `UART_HandleTypeDef` structure representing the UART interface.
- * @param format Format string, similar to that used in `printf`, specifying how to format the arguments.
- * @param ... Variable arguments to be formatted into the string.
+ * @param huart Puntatore alla struttura `UART_HandleTypeDef` che rappresenta l'interfaccia UART.
+ * @param format Stringa di formato, simile a quella usata in `printf`.
+ * @param ... Argomenti variabili da formattare nella stringa.
  */
 void Display_Message(UART_HandleTypeDef *huart, const char *format, ...)
 {

@@ -11,11 +11,11 @@
 #include "main.h"
 
 /* ==========================================
- * CONFIGURAZIONE INTERVALLI TASK (in ms)
+ * TASK INTERVAL CONFIGURATION (in ms)
  * ========================================== */
-#define INTERVAL_READ_INPUTS    20   // Lettura pulsanti, SR e manettino
-#define INTERVAL_SEND_CAN       50   // Invio parametri e mappa CAN
-#define INTERVAL_UPDATE_DISP    100  // Refresh dati Display
+#define INTERVAL_READ_INPUTS    20   // Read buttons, SR and rotary switch
+#define INTERVAL_SEND_CAN       150  // Send parameters and engine map via CAN
+#define INTERVAL_UPDATE_DISP    100  // Display data refresh
 
 /* ========================================== */
 

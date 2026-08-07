@@ -1,6 +1,6 @@
 #include "shift_register.h"
 
-// Globale nel file (nascosta all'esterno)
+// File-global state (hidden outside)
 static SR_State_t sr_state = {
     .currentValue = 0,
     .lastRawValue = 0xFF,
@@ -10,23 +10,21 @@ static SR_State_t sr_state = {
 };
 
 // ====================================================================
-// FUNZIONI PRIVATE
+// PRIVATE FUNCTIONS
 // ====================================================================
 
-// Lettura grezza bit-banging
-
-// Lettura grezza bit-banging (Identica alla tua, ottima)
+// Raw bit-banging read (active-low PL)
 static uint8_t SR_ReadRaw(void) {
     uint8_t data = 0;
     
-    // Pulse sul latch per caricare i dati paralleli (PL attivo basso)
+    // Pulse latch to load parallel data (active-low PL)
     HAL_GPIO_WritePin(SR_latch_GPIO_Port, SR_latch_Pin, GPIO_PIN_RESET);
-    for (volatile int i = 0; i < 72; i++) __NOP(); // circa ~1us @ 72MHz
+    for (volatile int i = 0; i < 72; i++) __NOP(); // approx ~1us @ 72MHz
     HAL_GPIO_WritePin(SR_latch_GPIO_Port, SR_latch_Pin, GPIO_PIN_SET);
     
-    for (volatile int i = 0; i < 10; i++) __NOP(); // Delay sicurezza
+    for (volatile int i = 0; i < 10; i++) __NOP(); // Safety delay
     
-    // Leggi i dati (MSB first: Q7 -> Q0)
+    // Read data (MSB first: Q7 -> Q0)
     for (int i = 0; i < 8; i++) {
         data <<= 1;
         
@@ -46,7 +44,7 @@ static uint8_t SR_ReadRaw(void) {
     return data;
 }
 
-// Conta i bit attivi 
+// Count set bits
 static uint8_t countBits(uint8_t value) {
     uint8_t count = 0;
     while (value) {
@@ -56,12 +54,12 @@ static uint8_t countBits(uint8_t value) {
     return count;
 }
 
-// Converte il Byte nella Posizione fisica del selettore (1-8)
+// Convert byte to selector physical position (1-8)
 static int8_t byteToPosition(uint8_t data) {
     uint8_t bitCount = countBits(data);
     
-    if (bitCount == 0) return 0; // Nessuna posizione attiva
-    if (bitCount != 1) return -1; // Errore: cortocircuito tra posizioni
+    if (bitCount == 0) return 0; // No position active
+    if (bitCount != 1) return -1; // Error: short circuit between positions
     
     for (int i = 0; i < 8; i++) {
         if (data & (1 << i)) {
@@ -73,7 +71,7 @@ static int8_t byteToPosition(uint8_t data) {
 
 
 // ====================================================================
-// FUNZIONI PUBBLICHE (chiamate da Tasks.c)
+// PUBLIC FUNCTIONS (called by Tasks.c)
 // ====================================================================
 
 void SR_Init(void) {
@@ -98,7 +96,7 @@ void SR_ProcessPeriodic(void) {
     
     uint8_t rawValue = SR_ReadRaw();
     
-    // Logica di Debouncing
+    // Debouncing logic
     if (rawValue == sr_state.lastRawValue) {
         if (sr_state.debounceCounter < SR_DEBOUNCE_SAMPLES) {
             sr_state.debounceCounter++;
@@ -107,18 +105,18 @@ void SR_ProcessPeriodic(void) {
         if (sr_state.debounceCounter >= SR_DEBOUNCE_SAMPLES) {
             if (rawValue != sr_state.currentValue) {
                 sr_state.currentValue = rawValue;
-                sr_state.isValid = 1; // Alza la flag per Tasks.c
+                sr_state.isValid = 1; // Set flag for Tasks.c
             }
         }
     } else {
         sr_state.lastRawValue = rawValue;
-        sr_state.debounceCounter = 1; // Resetta il contatore se fluttua
+        sr_state.debounceCounter = 1; // Reset counter if fluctuating
     }
 }
 
 uint8_t SR_HasChanged(void) {
     if (sr_state.isValid) {
-        sr_state.isValid = 0; // Consuma l'evento (Reset del flag)
+        sr_state.isValid = 0; // Consume event (flag reset)
         return 1;
     }
     return 0;
@@ -126,4 +124,8 @@ uint8_t SR_HasChanged(void) {
 
 int8_t SR_GetStablePosition(void) {
     return byteToPosition(sr_state.currentValue);
+}
+
+uint8_t SR_GetRawValue(void) {
+    return sr_state.lastRawValue;
 }

@@ -1,12 +1,12 @@
 /*
  * task_display.c
  * Task_UpdateDisplay - 100 ms
- * Aggiorna il display Nextion con i dati di telemetria.
+ * Updates Nextion display with telemetry data.
  *
- * Strategia:
- * - Errori: latch con timer (l'errore resta a schermo almeno ERROR_DISPLAY_HOLD_MS ms)
- * - Grafica (colori, sfondi crop, icone): edge-detection → inviata solo se mappa o pagina cambiano
- * - Dati numerici: inviati ogni ciclo (100 ms) solo per la pagina attiva
+ * Strategy:
+ * - Errors: latch with timer (error remains on screen for at least ERROR_DISPLAY_HOLD_MS ms)
+ * - Graphics (colors, crop backgrounds, icons): edge-detection -> sent only if map or page changes
+ * - Numeric data: sent every cycle (100 ms) only for the active page
  */
 
 #include "Tasks.h"
@@ -18,9 +18,10 @@
 #define MIN_MODULE_VOLTAGE 60.0f
 #define MAX_MODULE_VOLTAGE 105.0f
 
+static bool start_up = true;
 
 /* =========================================================================
- * HELPER GRAFICI (Colori e Sfondi)
+ * GRAPHIC HELPERS (Colors and Backgrounds)
  * ========================================================================= */
 static void get_map_colors(uint8_t map, uint16_t *bco, uint16_t *pco)
 {
@@ -32,7 +33,7 @@ static void get_map_colors(uint8_t map, uint16_t *bco, uint16_t *pco)
     }
 }
 
-/* Calcola l'ID dell'immagine di sfondo basandosi su Mappa(1-3) e Pagina(1-4) */
+/* Calculates background image ID based on Map(1-3) and Page(1-4) */
 static uint8_t get_bg_image_id(uint8_t map, uint8_t page)
 {
     uint8_t base_id = 0;
@@ -46,7 +47,7 @@ static uint8_t get_bg_image_id(uint8_t map, uint8_t page)
 }
 
 /* =========================================================================
- * Aggiornamento testo errore su Nextion
+ * Nextion error text update
  * ========================================================================= */
 static void Update_Error_Display(DashError_t err)
 {
@@ -60,7 +61,7 @@ static void Update_Error_Display(DashError_t err)
     if (err == last_sent && subcode == last_subcode) return;
 
     if (err == ERR_NONE) {
-        Nextion_Cmd("error.txt=\"\"");
+        Nextion_Cmd("error.txt=\"---\"");
     } else if (err == ERR_MCU_INV1_FAULT) {
         Nextion_Cmd("error.txt=\"L%d\"", subcode);
     } else if (err == ERR_MCU_INV2_FAULT) {
@@ -74,27 +75,26 @@ static void Update_Error_Display(DashError_t err)
 }
 
 /* =========================================================================
- * PAGINE
+ * PAGES
  * ========================================================================= */
 static void Draw_Page1(bool r2d, bool sdc, bool force)
 {
     static bool last_r2d = false;
     static bool last_sdc = false;
 
-    // Aggiornamento BACKGROUND e CROP IMAGE (Solo se Mappa o Pagina cambiano)
+    // BACKGROUND and CROP IMAGE update (Only if Map or Page changes)
     if (force) {
         uint8_t bg_id = get_bg_image_id(car_state.SR_map, 1);
-        Nextion_Cmd("page1.pic=%d", bg_id); // Cambia lo sfondo della pagina intera
+        Nextion_Cmd("page1.pic=%d", bg_id); // Update background attribute
 
         static const char* crop_objs[] = {
             "speed", "soc", "t_pack", "t_inv", "t_motor", "lvbatt_volt", "error"
         };
         for (size_t i = 0; i < (sizeof(crop_objs)/sizeof(crop_objs[0])); i++) {
-            Nextion_Cmd("%s.picc=%d", crop_objs[i], bg_id); // Aggiorna il ritaglio per i testi
+            Nextion_Cmd("%s.picc=%d", crop_objs[i], bg_id); // Update crop for texts
         }
-    }
+        Nextion_Cmd("ref 0"); // Redraw all components with new attributes
 
-    // Valori Numerici in Real-Time
     Nextion_Cmd("speed.txt=\"%d\"",   car_state.mcu.car_speed);
     Nextion_Cmd("soc.txt=\"%d\"",     car_state.bms.SoC_percent);
 
@@ -107,17 +107,19 @@ static void Draw_Page1(bool r2d, bool sdc, bool force)
     Nextion_Cmd("t_motor.txt=\"%d\"", (car_state.mcu.motor104_temp + car_state.mcu.motor204_temp) / 2);
     Nextion_Cmd("lvbatt_volt.txt=\"%.1f\"", car_state.pdm_vcu1.lv_battery_voltage);
 
-    // Icone di Stato (Edge detection hardware interno)
+    // Status icons
     if (r2d != last_r2d || force) {
         Nextion_Cmd("r2d_status.pic=%d", r2d ? 13 : 12);
         last_r2d = r2d;
+        Nextion_Cmd("ref 0");
     }
     if (sdc != last_sdc || force) {
         Nextion_Cmd("sdc_status.pic=%d", sdc ? 13 : 12);
         last_sdc = sdc;
+        Nextion_Cmd("ref 0");
     }
 
-    /* SOC bar progressiva (10 blocchi) */
+    /* Progressive SOC bar (10 blocks) */
     uint8_t soc = car_state.bms.SoC_percent;
     for (int i = 1; i <= 10; i++) {
         int val = 0;
@@ -132,24 +134,25 @@ static void Draw_Page2(bool r2d, bool sdc, bool force, uint16_t bco, uint16_t pc
     static bool last_r2d = false;
     static bool last_sdc = false;
 
-    // Aggiornamento BACKGROUND e CROP IMAGE
+    // BACKGROUND and CROP IMAGE update
     if (force) {
         uint8_t bg_id = get_bg_image_id(car_state.SR_map, 2);
         Nextion_Cmd("page2.pic=%d", bg_id);
 
         static const char* crop_objs[] = {
             "speed", "speed_fl", "speed_fr", "app1", "app2", "brake_bar", 
-            "cool_temp", "susp_fl", "susp_fr", "susp_rl", "susp_rr", "sas_angle"
+            "cool_temp", "susp_fl", "susp_fr", "susp_rl", "susp_rr", "sas_angle","error"
         };
         for (size_t i = 0; i < (sizeof(crop_objs)/sizeof(crop_objs[0])); i++) {
             Nextion_Cmd("%s.picc=%d", crop_objs[i], bg_id);
         }
 
-        // Colori per le barre progressive del SAS
+        // Colors for progressive SAS bars
         Nextion_Cmd("sas_perc_left.bco=%d",  pco);
         Nextion_Cmd("sas_perc_left.pco=%d",  bco);
         Nextion_Cmd("sas_perc_right.bco=%d", bco);
         Nextion_Cmd("sas_perc_right.pco=%d", pco);
+        Nextion_Cmd("ref 0");
     }
 
     Nextion_Cmd("speed.txt=\"%d\"",      car_state.mcu.car_speed);
@@ -167,10 +170,12 @@ static void Draw_Page2(bool r2d, bool sdc, bool force, uint16_t bco, uint16_t pc
     if (r2d != last_r2d || force) {
         Nextion_Cmd("r2d_status.pic=%d", r2d ? 13 : 12);
         last_r2d = r2d;
+        Nextion_Cmd("ref 0");
     }
     if (sdc != last_sdc || force) {
         Nextion_Cmd("sdc_status.pic=%d", sdc ? 13 : 12);
         last_sdc = sdc;
+        Nextion_Cmd("ref 0");
     }
 
     int sas = car_state.mcu.sas_percentage; 
@@ -188,7 +193,7 @@ static void Draw_Page2(bool r2d, bool sdc, bool force, uint16_t bco, uint16_t pc
 
 static void Draw_Page3(bool force, uint16_t bco, uint16_t pco)
 {
-    // Aggiornamento BACKGROUND e CROP IMAGE
+    // BACKGROUND and CROP IMAGE update
     if (force) {
         uint8_t bg_id = get_bg_image_id(car_state.SR_map, 3);
         Nextion_Cmd("page3.pic=%d", bg_id);
@@ -197,17 +202,18 @@ static void Draw_Page3(bool force, uint16_t bco, uint16_t pco)
             "speed", "lvbatt_volt", "fan_perc", "max_temp_pack", "curr_dis_max", 
             "curr_reg_max", "temp_mot1", "temp_mot2", "temp_inv1", "temp_inv2", 
             "current", "soc", "soh", "m1_volt", "m2_volt", "m3_volt", "m4_volt", 
-            "m5_volt", "m6_volt"
+            "m5_volt", "m6_volt","error"
         };
         for (size_t i = 0; i < (sizeof(crop_objs)/sizeof(crop_objs[0])); i++) {
             Nextion_Cmd("%s.picc=%d", crop_objs[i], bg_id);
         }
 
-        // Colori per le barre dei moduli
+        // Colors for module bars
         for (int i = 1; i <= BMS_NUM_MODULES; i++) {
-            Nextion_Cmd("m%d_perc.bco=%d", i, pco); /* bco/pco invertiti per i moduli */
+            Nextion_Cmd("m%d_perc.bco=%d", i, pco); /* bco/pco inverted for modules */
             Nextion_Cmd("m%d_perc.pco=%d", i, bco);
         }
+        Nextion_Cmd("ref 0");
     }
 
     int temp_pack_sum = 0, temp_pack_max = 0;
@@ -254,63 +260,74 @@ static void Draw_Page4(bool force, uint16_t bco, uint16_t pco)
 {
     static uint8_t last_setting = 0xFF;
     static uint8_t last_map     = 0xFF;
-    static uint8_t last_regen = 0, last_src = 0, last_os = 0, last_tvc = 0;
+    static uint8_t last_regen = 1, last_src = 1, last_tvc = 1, last_event = 1;
 
-    // Aggiornamento BACKGROUND e CROP IMAGE
+    // BACKGROUND and CROP IMAGE update
     if (force) {
         uint8_t bg_id = get_bg_image_id(car_state.SR_map, 4);
         Nextion_Cmd("page4.pic=%d", bg_id);
 
         static const char* crop_objs[] = {
-            "speed", "soc", "soh", "regen_text", "src_text", "os_text", "tvc_text",
-            "regen_num", "src_num", "os_num", "tvc_num"
+            "speed", "soc", "soh", "regen_text", "src_text", "tvc_text", "event_text",
+            "regen_num", "src_num", "tvc_num", "event_num","error"
         };
         for (size_t i = 0; i < (sizeof(crop_objs)/sizeof(crop_objs[0])); i++) {
             Nextion_Cmd("%s.picc=%d", crop_objs[i], bg_id);
         }
+        Nextion_Cmd("ref 0");
+
+        /* Force vis=0 on all buttons: subsequent DRAW_PARAM will bring them
+         * 0->1, guaranteeing redrawing (vis on already visible component is a no-op). */
+        static const char* btns[] = {
+            "regen_m","regen_p","src_m","src_p","tvc_m","tvc_p","event_m","event_p"
+        };
+        for (size_t i = 0; i < (sizeof(btns)/sizeof(btns[0])); i++) {
+            Nextion_Cmd("vis %s,0", btns[i]);
+        }
     }
 
-    Nextion_Cmd("speed.txt=\"%d\"",  car_state.mcu.car_speed);
-    Nextion_Cmd("soc.txt=\"%d\"",    car_state.bms.SoC_percent);
-    Nextion_Cmd("soh.txt=\"%d\"",    car_state.bms.SoH_percent);
-    Nextion_Cmd("regen_num.val=%d",  car_state.val_regen);
-    Nextion_Cmd("src_num.val=%d",    car_state.val_src);
-    Nextion_Cmd("os_num.val=%d",     car_state.val_os);
-    Nextion_Cmd("tvc_num.val=%d",    car_state.val_tvc);
+    Nextion_Cmd("speed.txt=\"%d\"",      car_state.mcu.car_speed);
+    Nextion_Cmd("soc.txt=\"%d\"",        car_state.bms.SoC_percent);
+    Nextion_Cmd("soh.txt=\"%d\"",        car_state.bms.SoH_percent);
+    Nextion_Cmd("regen_num.txt=\"%d\"",  car_state.val_regen);
+    Nextion_Cmd("src_num.txt=\"%d\"",    car_state.val_src);
+    Nextion_Cmd("tvc_num.txt=\"%d\"",    car_state.val_tvc);
+    Nextion_Cmd("event_num.txt=\"%d\"",  car_state.val_event);
 
     bool changed = force
         || car_state.selected_setting != last_setting
         || car_state.SR_map           != last_map
         || car_state.val_regen        != last_regen
         || car_state.val_src          != last_src
-        || car_state.val_os           != last_os
-        || car_state.val_tvc          != last_tvc;
+        || car_state.val_tvc          != last_tvc
+        || car_state.val_event        != last_event;
 
     if (!changed) return;
 
-    /* Icone +/- in base alla mappa */
+    /* +/- icons based on map */
     uint8_t pic_p = 0, pic_m = 0;
     uint16_t txt_active = bco;
     switch (car_state.SR_map) {
-        case 1: pic_p = 23; pic_m = 21; break; /* ECO  */
-        case 2: pic_p = 22; pic_m = 20; break; /* NORM */
+        case 1: pic_p = 19; pic_m = 17; break; /* ECO  */
+        case 2: pic_p = 18; pic_m = 16; break; /* NORM */
         case 3: pic_p = 15; pic_m = 14; break; /* GAS  */
         default: break;
     }
     (void)pco; 
 
-    /* Helper macro per aggiornare una riga parametro */
-#define DRAW_PARAM(name, sel, val) \
+    /* Helper macro to update a parameter row */
+#define DRAW_PARAM(name, sel, val) do { \
     Nextion_Cmd(name "_text.pco=%d",  (car_state.selected_setting == (sel)) ? txt_active : 65535); \
     Nextion_Cmd(name "_p.pic=%d",     pic_p); \
     Nextion_Cmd(name "_m.pic=%d",     pic_m); \
     Nextion_Cmd("vis " name "_m,%d",  ((val) > 1) ? 1 : 0); \
-    Nextion_Cmd("vis " name "_p,%d",  ((val) < 4) ? 1 : 0)
+    Nextion_Cmd("vis " name "_p,%d",  ((val) < 4) ? 1 : 0); \
+} while(0)
 
     DRAW_PARAM("regen", 1, car_state.val_regen);
     DRAW_PARAM("src",   2, car_state.val_src);
-    DRAW_PARAM("os",    3, car_state.val_os);
-    DRAW_PARAM("tvc",   4, car_state.val_tvc);
+    DRAW_PARAM("tvc",    3, car_state.val_tvc);
+    DRAW_PARAM("event",   4, car_state.val_event);
 
 #undef DRAW_PARAM
 
@@ -318,8 +335,8 @@ static void Draw_Page4(bool force, uint16_t bco, uint16_t pco)
     last_map     = car_state.SR_map;
     last_regen   = car_state.val_regen;
     last_src     = car_state.val_src;
-    last_os      = car_state.val_os;
     last_tvc     = car_state.val_tvc;
+    last_event   = car_state.val_event;
 }
 
 /* =========================================================================
@@ -327,12 +344,13 @@ static void Draw_Page4(bool force, uint16_t bco, uint16_t pco)
  * ========================================================================= */
 void Task_UpdateDisplay(void)
 {
+	//car_state.mcu.car_speed++;
     static DashError_t displayed_error = ERR_NONE;
     static uint32_t    error_timer     = 0;
     static uint8_t     last_page = 0xFF;
     static uint8_t     last_map  = 0xFF;
 
-    /* --- 1. Errori: latch con hold timer --- */
+    /* --- 1. Errors: latch with hold timer --- */
     Task_Check_Errors();
     DashError_t current_error = car_state.error;
 
@@ -349,7 +367,7 @@ void Task_UpdateDisplay(void)
 
     Update_Error_Display(displayed_error);
 
-    /* --- 2. Pre-calcolo stato grafico --- */
+    /* --- 2. Pre-compute graphic state --- */
     bool force = (car_state.current_page != last_page || car_state.SR_map != last_map);
     last_page = car_state.current_page;
     last_map  = car_state.SR_map;
@@ -360,7 +378,11 @@ void Task_UpdateDisplay(void)
     uint16_t bco = 0, pco = 0;
     get_map_colors(car_state.SR_map, &bco, &pco);
 
-    /* --- 3. Aggiornamento pagina attiva --- */
+    if (start_up) {
+        force = true;
+        start_up = false;
+    }
+    /* --- 3. Active page update --- */
     switch (car_state.current_page) {
         case 1: Draw_Page1(r2d, sdc, force);        break;
         case 2: Draw_Page2(r2d, sdc, force, bco, pco); break;

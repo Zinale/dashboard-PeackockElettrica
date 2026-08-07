@@ -101,6 +101,7 @@ int main(void)
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
   SchedulerInit();
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -108,6 +109,18 @@ int main(void)
   while (1)
   {
 	  SchedulerManagementFunction();
+
+	  /* DEBUG: incrementa SoC una volta al secondo */
+	  /*
+	   * static uint32_t last_debug_tick = 0;
+	  uint32_t now = HAL_GetTick();
+	  if (now - last_debug_tick >= 1000) {
+		  last_debug_tick = now;
+		  car_state.bms.SoC_percent++;
+		  if (car_state.bms.SoC_percent > 100) car_state.bms.SoC_percent = 0;
+	  }
+	  */
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -127,12 +140,11 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
-  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
-  RCC_OscInitStruct.HSEPredivValue = RCC_HSE_PREDIV_DIV3;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
+  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
   RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL16;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
@@ -152,10 +164,6 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-
-  /** Enables the Clock Security System
-  */
-  HAL_RCC_EnableCSS();
 }
 
 /**
@@ -182,7 +190,7 @@ static void MX_CAN_Init(void)
   hcan.Init.TimeTriggeredMode = DISABLE;
   hcan.Init.AutoBusOff = ENABLE;
   hcan.Init.AutoWakeUp = DISABLE;
-  hcan.Init.AutoRetransmission = DISABLE;
+  hcan.Init.AutoRetransmission = ENABLE;
   hcan.Init.ReceiveFifoLocked = DISABLE;
   hcan.Init.TransmitFifoPriority = DISABLE;
   if (HAL_CAN_Init(&hcan) != HAL_OK)
@@ -264,7 +272,20 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, SR_clock_Pin|SR_latch_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(luce_pcb_GPIO_Port, luce_pcb_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(SR_latch_GPIO_Port, SR_latch_Pin, GPIO_PIN_SET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(SR_clock_GPIO_Port, SR_clock_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin : luce_pcb_Pin */
+  GPIO_InitStruct.Pin = luce_pcb_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(luce_pcb_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : R2D_btn_Pin PAGE_btn_Pin */
   GPIO_InitStruct.Pin = R2D_btn_Pin|PAGE_btn_Pin;
@@ -272,18 +293,18 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : SR_clock_Pin SR_latch_Pin */
-  GPIO_InitStruct.Pin = SR_clock_Pin|SR_latch_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
   /*Configure GPIO pin : SR_data_Pin */
   GPIO_InitStruct.Pin = SR_data_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(SR_data_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : SR_latch_Pin SR_clock_Pin */
+  GPIO_InitStruct.Pin = SR_latch_Pin|SR_clock_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */
 
