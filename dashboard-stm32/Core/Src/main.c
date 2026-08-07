@@ -110,11 +110,16 @@ int main(void)
   {
 	  SchedulerManagementFunction();
 
-
-	  if(HAL_GetTick() % 1000 == 0){
-		 // HAL_GPIO_TogglePin(luce_pcb_GPIO_Port,luce_pcb_Pin);
-		  //car_state.mcu.car_speed++;
+	  /* DEBUG: incrementa SoC una volta al secondo */
+	  /*
+	   * static uint32_t last_debug_tick = 0;
+	  uint32_t now = HAL_GetTick();
+	  if (now - last_debug_tick >= 1000) {
+		  last_debug_tick = now;
+		  car_state.bms.SoC_percent++;
+		  if (car_state.bms.SoC_percent > 100) car_state.bms.SoC_percent = 0;
 	  }
+	  */
 
     /* USER CODE END WHILE */
 

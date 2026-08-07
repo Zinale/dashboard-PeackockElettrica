@@ -1,5 +1,5 @@
-﻿/* Tasks.c  -  Inizializzazione e reset di sistema. */
-/* Le task periodiche: Core/Src/Tasks/ */
+﻿/* Tasks.c  -  Initialization and system reset. */
+/* Periodic tasks location: Core/Src/Tasks/ */
 
 #include "Tasks.h"
 #include "Communication/serial.h"

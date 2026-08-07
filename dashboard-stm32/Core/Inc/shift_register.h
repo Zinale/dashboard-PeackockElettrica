@@ -7,7 +7,7 @@
 // #define SR_DEBUG_PRINT
 
 #define SR_DEBOUNCE_SAMPLES 5
-#define SR_READ_INTERVAL_MS 10 // Il task gira a 20ms, quindi questo può stare a 0 o 10
+#define SR_READ_INTERVAL_MS 10 // Task runs at 20ms, so this can be 0 or 10
 
 typedef struct {
     uint8_t currentValue;
@@ -21,7 +21,7 @@ void SR_Init(void);
 void SR_ProcessPeriodic(void);
 uint8_t SR_HasChanged(void);
 int8_t SR_GetStablePosition(void);
-uint8_t SR_GetRawValue(void);   // Restituisce l'ultimo byte grezzo letto (prima del debounce)
+uint8_t SR_GetRawValue(void);   // Returns last raw byte read (before debounce)
 
 
 

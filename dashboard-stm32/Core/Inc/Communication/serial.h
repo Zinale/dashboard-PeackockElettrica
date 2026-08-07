@@ -27,7 +27,7 @@ extern volatile uint8_t uart2_tx_busy;
 // Serial communication function
 void Display_Message(UART_HandleTypeDef *huart, const char *format, ...);
 
-// Nextion display: invia comando + terminatore 0xFF 0xFF 0xFF in un unico DMA
+// Nextion display: send command + terminator 0xFF 0xFF 0xFF in a single DMA transfer
 void Nextion_Cmd(const char *fmt, ...);
 
 

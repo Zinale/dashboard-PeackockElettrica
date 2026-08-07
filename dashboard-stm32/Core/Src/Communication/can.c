@@ -16,7 +16,7 @@ void CanInit(void)
 #ifdef CAN_ENABLE
     CAN_FilterTypeDef sFilterConfig;
 
-    /* Filtro pass-all: accetta tutti gli ID standard */
+    /* Pass-all filter: accepts all standard IDs */
     sFilterConfig.FilterBank           = 0;
     sFilterConfig.FilterMode           = CAN_FILTERMODE_IDMASK;
     sFilterConfig.FilterScale          = CAN_FILTERSCALE_32BIT;
@@ -53,7 +53,7 @@ void CanInit(void)
 }
 
 /* =========================================================================
- *  TRASMISSIONE
+ *  TRANSMISSION
  * ========================================================================= */
 void Transmit_CAN_Message(CAN_HandleTypeDef *hcan, uint32_t StdId,
                            uint32_t DLC, uint8_t *TxData)
@@ -101,7 +101,7 @@ static void Transmit_CAN_Message_MCP2551(CAN_HandleTypeDef *hcan, uint32_t StdId
 }
 
 /* =========================================================================
- *  RICEZIONE 
+ *  RECEPTION 
  * ========================================================================= */
 void Receive_CAN_Message(CAN_HandleTypeDef *hcan)
 {
@@ -112,8 +112,8 @@ void Receive_CAN_Message(CAN_HandleTypeDef *hcan)
 }
 
 /* =========================================================================
- *  RICEZIONE – implementazione MCP2551
- *  Chiamata dalla callback HAL_CAN_RxFifo0MsgPendingCallback in main.c
+ *  RECEPTION – MCP2551 implementation
+ *  Called by callback HAL_CAN_RxFifo0MsgPendingCallback in main.c
  * ========================================================================= */
 static void Receive_CAN_Message_MCP2551(CAN_HandleTypeDef *hcan)
 {

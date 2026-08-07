@@ -14,10 +14,10 @@
 
 extern CarData_t car_state;
 
-/* Inizializzazione */
+/* Initialization */
 void TaskInit(void);
 
-/* Task periodici chiamati dallo Scheduler */
+/* Periodic tasks called by the Scheduler */
 void Task_ReadInputs(void);    /* 20 ms  – pulsanti, SR, manettino */
 void Task_SendCAN(void);       /* 150 ms  – trasmissione frame verso la macchina */
 void Task_UpdateDisplay(void); /* 100 ms – aggiornamento display Nextion */
