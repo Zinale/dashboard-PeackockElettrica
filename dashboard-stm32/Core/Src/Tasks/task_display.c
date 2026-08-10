@@ -49,7 +49,7 @@ static uint8_t get_bg_image_id(uint8_t map, uint8_t page)
 /* =========================================================================
  * Nextion error text update
  * ========================================================================= */
-static void Update_Error_Display(DashError_t err)
+static void Update_Error_Display(DashError_t err, bool force)
 {
     static DashError_t last_sent  = ERR_NONE;
     static uint16_t    last_subcode = 0;
@@ -58,7 +58,7 @@ static void Update_Error_Display(DashError_t err)
     if      (err == ERR_MCU_INV1_FAULT) subcode = car_state.mcu.inv1_error_num;
     else if (err == ERR_MCU_INV2_FAULT) subcode = car_state.mcu.inv2_error_num;
 
-    if (err == last_sent && subcode == last_subcode) return;
+    if (!force && err == last_sent && subcode == last_subcode) return;
 
     if (err == ERR_NONE) {
         Nextion_Cmd("error.txt=\"---\"");
@@ -94,6 +94,7 @@ static void Draw_Page1(bool r2d, bool sdc, bool force)
             Nextion_Cmd("%s.picc=%d", crop_objs[i], bg_id); // Update crop for texts
         }
         Nextion_Cmd("ref 0"); // Redraw all components with new attributes
+    }
 
     Nextion_Cmd("speed.txt=\"%d\"",   car_state.mcu.car_speed);
     Nextion_Cmd("soc.txt=\"%d\"",     car_state.bms.SoC_percent);
@@ -365,8 +366,6 @@ void Task_UpdateDisplay(void)
         displayed_error = ERR_NONE;
     }
 
-    Update_Error_Display(displayed_error);
-
     /* --- 2. Pre-compute graphic state --- */
     bool force = (car_state.current_page != last_page || car_state.SR_map != last_map);
     last_page = car_state.current_page;
@@ -382,6 +381,9 @@ void Task_UpdateDisplay(void)
         force = true;
         start_up = false;
     }
+
+    Update_Error_Display(displayed_error, force);
+
     /* --- 3. Active page update --- */
     switch (car_state.current_page) {
         case 1: Draw_Page1(r2d, sdc, force);        break;

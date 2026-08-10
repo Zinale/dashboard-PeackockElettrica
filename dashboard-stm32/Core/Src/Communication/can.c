@@ -543,6 +543,7 @@ void CAN_ParseFrame(uint32_t id, uint8_t *data, uint8_t dlc)
          * 0x401 – LV_BATT  (PDM VCU1 -> DASH, little-endian U16)
          *
          * Byte 0-1: tensione LV [V * 100]  es. 1200 = 12.00 V
+         * Byte 2-3: ampere LV [A * 100] es. 2400 = 24.00 V
          * ----------------------------------------------------------------- */
         case CAR_LV_BATT:
         {

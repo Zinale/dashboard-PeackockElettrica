@@ -15,7 +15,7 @@
  * ========================================== */
 #define INTERVAL_READ_INPUTS    20   // Read buttons, SR and rotary switch
 #define INTERVAL_SEND_CAN       150  // Send parameters and engine map via CAN
-#define INTERVAL_UPDATE_DISP    100  // Display data refresh
+#define INTERVAL_UPDATE_DISP    70  // Display data refresh
 
 /* ========================================== */
 

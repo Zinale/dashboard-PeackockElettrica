@@ -1,6 +1,6 @@
 /*
  * task_can.c
- *  Task_SendCAN - 50 ms
+ *  Task_SendCAN - 150 ms
  *  Trasmette verso la macchina: R2D request, mappa motore, parametri dinamici.
  *
  *  Frame 0x106 - 3 byte:
@@ -14,7 +14,7 @@
 
 
 /* =========================================================================
- * Task_SendCAN  [50 ms]
+ * Task_SendCAN  [150 ms]
  * ========================================================================= */
 void Task_SendCAN(void)
 {
