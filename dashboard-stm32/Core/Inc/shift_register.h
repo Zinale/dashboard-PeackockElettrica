@@ -5,6 +5,7 @@
 
 #define USE_SR
 // #define SR_DEBUG_PRINT
+#define R2D_DEBUG   /* Skip SDC/brake/speed checks for R2D activation */
 
 #define SR_DEBOUNCE_SAMPLES 5
 #define SR_READ_INTERVAL_MS 10 // Task runs at 20ms, so this can be 0 or 10

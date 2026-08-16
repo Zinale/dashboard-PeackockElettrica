@@ -112,12 +112,12 @@ static void Draw_Page1(bool r2d, bool sdc, bool force)
     if (r2d != last_r2d || force) {
         Nextion_Cmd("r2d_status.pic=%d", r2d ? 13 : 12);
         last_r2d = r2d;
-        Nextion_Cmd("ref 0");
+        //Nextion_Cmd("ref 0");
     }
     if (sdc != last_sdc || force) {
         Nextion_Cmd("sdc_status.pic=%d", sdc ? 13 : 12);
         last_sdc = sdc;
-        Nextion_Cmd("ref 0");
+        //Nextion_Cmd("ref 0");
     }
 
     /* Progressive SOC bar (10 blocks) */
@@ -171,12 +171,12 @@ static void Draw_Page2(bool r2d, bool sdc, bool force, uint16_t bco, uint16_t pc
     if (r2d != last_r2d || force) {
         Nextion_Cmd("r2d_status.pic=%d", r2d ? 13 : 12);
         last_r2d = r2d;
-        Nextion_Cmd("ref 0");
+        //Nextion_Cmd("ref 0");
     }
     if (sdc != last_sdc || force) {
         Nextion_Cmd("sdc_status.pic=%d", sdc ? 13 : 12);
         last_sdc = sdc;
-        Nextion_Cmd("ref 0");
+        //Nextion_Cmd("ref 0");
     }
 
     int sas = car_state.mcu.sas_percentage; 

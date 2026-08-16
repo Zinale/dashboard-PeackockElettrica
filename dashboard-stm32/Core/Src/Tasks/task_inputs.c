@@ -196,8 +196,10 @@ static void Process_Input_Actions(void)
         car_state.btn_1.just_pressed = false;
     }
     /* Force R2D off if SDC is inactive */
+#ifndef R2D_DEBUG
     if (!car_state.bms.sdc_state)
         car_state.r2d = false;
+#endif
 
     /* --- PAGE: change page or cycle selected parameter --- */
     if (car_state.btn_2.just_pressed) {
